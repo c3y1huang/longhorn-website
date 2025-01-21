@@ -7,11 +7,15 @@ weight: 1
 - [How to create a Longhorn system backup](#create-longhorn-system-backup)
     - [Prerequisite](#prerequisite)
     - [Configuration](#configuration)
-    - [Using Longhorn UI](#using-longhorn-ui)
-    - [Using kubectl command](#using-kubectl-command)
+    - [Single Execution](#single-execution)
+      - [Using Longhorn UI](#using-longhorn-ui)
+      - [Using kubectl command](#using-kubectl-command)
+    - [Recurring Job](#recurring-job)
+      - [Using Longhorn UI](#using-longhorn-ui-1)
+      - [Using kubectl command](#using-kubectl-command-1)
 - [How to delete Longhorn system backup](#delete-longhorn-system-backup)
-    - [Using Longhorn UI](#using-longhorn-ui-1)
-    - [Using kubectl command](#using-kubectl-command-1)
+    - [Using Longhorn UI](#using-longhorn-ui-2)
+    - [Using kubectl command](#using-kubectl-command-2)
 - [History](#history)
 
 ## Longhorn System Backup Bundle
@@ -69,7 +73,9 @@ The Longhorn system backup offers the following volume backup policies:
  - `always`: Longhorn will create a backup for all volumes, regardless of their existing backups.
  - `disabled`: Longhorn will not create any backups for volumes.
 
-### Using Longhorn UI
+### Single Execution
+
+#### Using Longhorn UI
 
 1. Go to the `System Backup` page in the `Setting` drop-down list.
 1. Click `Create` under `System Backup`.
@@ -77,7 +83,7 @@ The Longhorn system backup offers the following volume backup policies:
 1. Select a `Volume Backup Policy` for the system backup.
 1. The system backup will be ready to use when the state changes to `Ready`.
 
-### Using `kubectl` Command
+#### Using `kubectl` Command
 
 1. Execute `kubectl create` to create a Longhorn `SystemBackup` custom resource.
    ```yaml
@@ -95,6 +101,37 @@ The Longhorn system backup offers the following volume backup policies:
    NAME   VERSION   STATE   CREATED
    demo   v1.4.0    Ready   2022-11-24T04:23:24Z
    ```
+
+### Recurring Job
+
+#### Using Longhorn UI
+
+1. Go to the `Recurring Job` page.
+1. Click on `Create Recurring Job`.
+1. Enter a `Name` for the recurring system backup.
+1. From the `Task` dropdown, select `System Backup`.
+1. Enter a `Ratain` number for the system backup to retain.
+1. Set the `Cron` schedule time.
+1. In the `Parameters` dropdown, select `volume-backup-policy`.
+1. The recurring job will create system backups according to the defined cron schedule.
+
+#### Using `kubectl` Command
+
+1. Execute `kubectl create` to create a Longhorn `RecurringJob` custom resource with task `system-backup`.
+   ```yaml
+   apiVersion: longhorn.io/v1beta2
+   kind: RecurringJob
+   metadata:
+     name: demo
+     namespace: longhorn-system
+   spec:
+     task: system-backup
+     cron: '* * * * *'
+     retain: 1
+     parameters:
+       volume-backup-policy: if-not-present
+   ```
+1. The recurring job will create system backups according to the defined cron schedule.
 
 ## Delete Longhorn System Backup
 
@@ -114,7 +151,7 @@ You can delete the Longhorn system backup in the remote backup target using the 
    > kubectl -n longhorn-system get systembackup
    NAME   VERSION   STATE   CREATED
    demo   v1.4.0    Ready   2022-11-24T04:23:24Z
-   
+
    > kubectl -n longhorn-system delete systembackup/demo
    systembackup.longhorn.io "demo" deleted
    ```
